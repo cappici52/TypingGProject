@@ -1,0 +1,11 @@
+import { useEffect, useState } from "react";
+import { STAGES } from "../../lib/game";
+import PixelIcon from "./PixelIcon";
+
+export default function Campaign({ stage, unlocked, disabled, onSelect }: { stage: number; unlocked: number; disabled: boolean; onSelect: (stage: number) => void }) {
+  const [page, setPage] = useState(Math.floor((stage - 1) / 5));
+  useEffect(() => { setPage(Math.floor((stage - 1) / 5)); }, [stage]);
+  return <section className="campaign stone-frame"><h2><span className="ornament">✦</span> THE CAMPAIGN <span className="ornament">✦</span></h2><p className="rail-subtitle">30 ด่าน · มินิบอสทุก 5 · บอสทุก 10</p><div className="stages">{STAGES.slice(page * 5, page * 5 + 5).map(item => <button key={item.number} className={`stage-option ${stage === item.number ? "selected" : ""} ${item.encounter !== "normal" ? "encounter-stage" : ""}`} disabled={disabled || item.number > unlocked} onClick={() => onSelect(item.number)} aria-label={`ด่าน ${item.number} ${item.name}${item.encounter !== "normal" ? ` ${item.region}` : ""}${item.number > unlocked ? " ยังไม่ปลดล็อก" : ""}`} aria-current={stage === item.number ? "step" : undefined}>
+    <span className={`stage-thumb biome-${item.biome}`}>{item.encounter !== "normal" ? <PixelIcon name={item.encounter === "boss" ? "trophy" : "sword"} /> : null}</span><span className="stage-description"><strong>{String(item.number).padStart(2, "0")}. {item.region}</strong><small>{item.name}</small><span className="difficulty">{Array.from({ length: 5 }, (_, n) => <i key={n} className={n < Math.ceil(item.number / 6) ? "filled" : ""} />)}</span></span><span className="stage-state">{item.number > unlocked ? <PixelIcon name="lock" /> : item.number < unlocked ? "✓" : stage === item.number ? "◂" : ""}</span>
+  </button>)}</div><div className="campaign-pagination"><button className="icon-button" onClick={() => setPage(p => p - 1)} disabled={page === 0} aria-label="ด่านชุดก่อนหน้า">←</button><span>{page * 5 + 1}–{page * 5 + 5} / {STAGES.length}</span><button className="icon-button" onClick={() => setPage(p => p + 1)} disabled={page >= 5} aria-label="ด่านชุดถัดไป">→</button></div><div className="campaign-note"><PixelIcon name="lock" /><span>ผ่านด่านเพื่อปลดล็อกเส้นทางถัดไป</span></div></section>;
+}

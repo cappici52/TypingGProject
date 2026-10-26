@@ -56,5 +56,11 @@ Buttons share hover gold border, focus-visible outline, depressed active state a
 - Do preserve the user's arena / keyboard / stage rail information architecture.
 - Do keep text and controls semantic and code native.
 - Don't add a marketing page before the playable game.
-- Don't imply guest runs are synced to an account.
+- Don't imply local saves sync across devices or require an account. The online site was permanently retired at the user's request; this is a local-only game.
 
+## Local edition additions
+
+The campaign pages through 30 stages in groups of five; minibosses at 5/15/25 and major bosses at 10/20/30. Preserve the established palette and typography. My Journal replaces account controls and shares the existing dialog language with Bestiary and instructions. A true 4-column by 3-row hero atlas supplies four idle, attack and hurt frames. Fifteen distinct normal monster sprites use a 5-by-3 atlas and species-specific idle motions. Hits flash and recoil; defeat motion lasts 550ms. Minibosses use medium 174px boxes, major bosses 238px boxes, reduced on mobile. The boss command panel owns HP and deadline bars. Pause freezes combat animation; reduced-motion uses static action frames and highlights. Save import previews and explicit replacement confirmation use the same square pixel control grammar.
+
+
+Motion behavior: the user explicitly requested animated combat. The game Motion switch defaults on independently of operating system motion settings and persists the chosen state. Off removes movement and supplies static attack/hurt frames. Ambient fireflies continue to respect system reduced-motion. Pause freezes combat frames.

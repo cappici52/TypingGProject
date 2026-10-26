@@ -11,6 +11,7 @@
 
 # Generated builds and framework state
 /dist/
+/local-dist/
 /.next/
 /.vinext/
 /out/

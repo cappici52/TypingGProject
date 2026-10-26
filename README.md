@@ -1,27 +1,55 @@
-# RUNEBLADE
+# RUNEBLADE — Local Edition
 
-A fully pixel art medieval fantasy typing game. Thai, English, JavaScript and Python word modes; five increasingly difficult stages; five hearts; animated attacks, combo scoring, WPM and accuracy. Account sign-in uses the Sites platform's ChatGPT identity. Runs are stored per user in Cloudflare D1. Guest history stays on the current device.
+เกมฝึกพิมพ์ pixel art ส่วนตัว: 30 ด่าน, 15 มอนสเตอร์ไม่ซ้ำ, มินิบอสที่ด่าน 5/15/25, บอสใหญ่ที่ด่าน 10/20/30, แอนิเมชัน idle/โจมตี/โดนตี/กำจัดศัตรู, ไทย/อังกฤษ/JavaScript/Python
 
-## Develop
+## เปิดเล่น
+
+ดับเบิลคลิก **Runeblade.cmd** ในโฟลเดอร์นี้ เกมจะเปิดที่ **http://127.0.0.1:4173/** โดยไม่ต้องล็อกอิน และไม่ต้องใช้อินเทอร์เน็ตเมื่อมีไฟล์ build อยู่แล้ว
+
+- ตัวเปิดเกมเริ่มเซิร์ฟเวอร์แบบซ่อนหน้าต่างและรับการเชื่อมต่อเฉพาะ 127.0.0.1
+- ใช้เบราว์เซอร์เดิมและ URL เดิมเสมอเพื่อใช้เซฟเดิม
+- คะแนน ด่านที่ปลดล็อก และการต่อสู้ที่ค้างอยู่บันทึกใน localStorage ทุกวินาที เมื่อจบคำ และเมื่อปิดหน้า
+- เปิดกลับมาแล้วกด Resume เพื่อเล่นต่อ เวลาพักไม่นับ WPM
+- My Journal มีปุ่มส่งออก/นำเข้าไฟล์เซฟ สำรองก่อนล้างข้อมูลเบราว์เซอร์หรือย้ายเครื่อง
+- การใช้ Incognito หรือการล้างข้อมูลเว็บไซต์อาจลบเซฟได้ ระบบแจ้งเมื่อไม่สามารถเขียนเซฟ
+- ปุ่มยุติรอบนี้ในหน้าพักจะจบรอบและเก็บคะแนน โดยไม่ปลดล็อกด่าน
+
+ลิงก์ออนไลน์เก่าถูกลบตามคำอนุญาตของผู้ใช้เมื่อ 26 ตุลาคม 2026 โครงการนี้เป็น **local-only** ห้ามสร้าง Sites ใหม่หรือเผยแพร่ขึ้นออนไลน์โดยไม่มีคำขอใหม่จากผู้ใช้
+
+## พัฒนาและสร้างไฟล์ในเครื่อง
+
+ต้องมี Node.js 22 ขึ้นไป (มีอยู่แล้วในเครื่องนี้)
 
 ```powershell
 npm ci
-npm run db:generate # only after schema changes
-npm run build
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_ordinary_sumo.sql
-npm run dev
+npm run dev:local
+npm run build:local
+npm start
 ```
 
-Apply each pending migration once; do not replay the initial migration. The local sign-in route simulates a development user on loopback only. Production sign-in is owned by Sites, not an email/password service in this repository. The site is owner-private until access is explicitly changed.
 
-## Verify
+pm start` ให้บริการไฟล์จาก local-dist ด้วยพอร์ตคงที่ 4173 เพื่อให้เซฟไม่เปลี่ยน origin ไม่ใช้ ChatGPT, Cloudflare D1, API key หรือบริการบัญชีใดๆ ระหว่างเล่น
+
+## ตรวจสอบ
 
 ```powershell
-npm run typecheck
 npm test
-npm run build
+npm run typecheck
+npm run build:local
 ```
 
-Game engine: `lib/game.ts`. Interface: `components/game/`. Account API: `app/api/runs/route.ts`. Visual system: `DESIGN.md` and `app/globals.css`. Behavior: `UX-CONTRACT.md`. Artwork and font credits: `docs/ASSETS.md`.
+ทดสอบระบบโจมตี ความแม่นยำ หัวใจ 15 สายพันธุ์ ลำดับบอส HP คำ/ประโยค timeout pause/restore การเซฟทศนิยม ย้ายเซฟ และข้อมูลที่เสียหาย
 
-Practice scores are client-reported personal records, not verified competitive leaderboard scores. WPM counts completed-word characters divided by five, per active minute. Pause time is excluded. Accuracy counts correctly entered prefix characters versus all added characters, including errors corrected later.
+## ส่วนสำคัญ
+
+- `lib/game.ts`: กติกาและสถานะต่อสู้
+- `lib/monsters.ts`: มอนสเตอร์ 15 ตัวและบอส 6 ตัว
+- `lib/save.ts`, `hooks/use-local-save.ts`: เซฟในเครื่อง ตรวจข้อมูลและกู้คืน
+- `components/game/`: เกม รายการด่าน สมุดบันทึกและ Bestiary
+- `local/`, `vite.local.config.ts`: ตัวแอปที่ไม่ต้องมี backend
+- `scripts/local-server.mjs`, `scripts/launch-local.ps1`: เปิดเกมเฉพาะเครื่องนี้
+- `public/art/`: ภาพ pixel art และ sprite atlas
+
+WPM นับอักขระของคำที่พิมพ์สำเร็จ ÷ 5 ต่อนาทีที่เล่นจริง ความแม่นยำนับอักขระที่ตรงกับต้นคำเทียบกับอักขระที่เพิ่มทั้งหมด รวมครั้งที่พิมพ์ผิดก่อนแก้ไข คะแนนเป็นสถิติฝึกส่วนตัว
+
+ปุ่ม MOTION ใต้คีย์บอร์ดใช้เปิด/ปิดแอนิเมชันในเกม และจำค่าที่เลือกไว้ แอนิเมชันการต่อสู้เริ่มต้นเปิดตามคำขอ แม้ Windows ตั้งค่าลดการเคลื่อนไหว ผู้เล่นปิดกลับได้โดยไม่ต้องแก้การตั้งค่า Windows
