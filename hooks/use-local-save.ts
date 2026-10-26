@@ -42,7 +42,7 @@ export function useLocalSave(battle: Battle, restore: (save: Save) => void) {
   }, [ready, flush]);
   useEffect(() => { if (ready) flush(); }, [battle.mode, battle.stage, battle.status, battle.words, ready, flush]);
   const record = useCallback((run: Run) => {
-    const next = addRun(latestSave.current, run);
+    const next = addRun(checkpointSave(latestSave.current, latestBattle.current), run);
     latestSave.current = next; setSave(next);
     if (unreadable.current) return false;
     return write(next);

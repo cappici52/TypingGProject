@@ -64,3 +64,7 @@ The campaign pages through 30 stages in groups of five; minibosses at 5/15/25 an
 
 
 Motion behavior: the user explicitly requested animated combat. The game Motion switch defaults on independently of operating system motion settings and persists the chosen state. Off removes movement and supplies static attack/hurt frames. Ambient fireflies continue to respect system reduced-motion. Pause freezes combat frames.
+
+Soundtrack controls reuse the square stone frame and motion-toggle button, with a labeled native range slider styled in gold. Music is independently controlled from combat effects, starts only after a player click, pauses in hidden tabs, and remembers volume. The original offline lute/recorder dance is public/audio/whispering-woods.wav.
+
+Combat effects use original short wooden mechanism taps with muted iron overtones, three alternating variants and six concurrent typing voices. Final enemy HP triggers a separate impact/fall/lute flourish; guardian defeat uses a longer cadence. The existing header effects button owns typing and combat sounds, defaults on, remembers the preference, and remains independent of MusicControls.

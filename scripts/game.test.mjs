@@ -27,20 +27,22 @@ function enterBoss(mode, stage) {
 const run = (stage, mode = 'en', cleared = true) => ({ id: crypto.randomUUID(), mode, stage, score: 300, wpm: 45, accuracy: 96, cleared, createdAt: Date.now() });
 
 test('a full word attacks once, scores, leaves a visible defeat animation and clears input', () => {
-  let state = reduce(start(), { type: 'input', value: 'l' });
+  const word = start().enemies[0].word;
+  let state = reduce(start(), { type: 'input', value: word.slice(0, 1) });
   assert.equal(state.kills, 0); assert.equal(state.enemies[0].hurtAt, state.elapsed);
-  state = reduce({ ...state, elapsed: 60000 }, { type: 'input', value: 'leaf' });
+  state = reduce({ ...state, elapsed: 60000 }, { type: 'input', value: word });
   assert.equal(state.kills, 1); assert.equal(state.words, 1); assert.equal(state.enemies.length, 0);
-  assert.equal(state.defeated.length, 1); assert.equal(state.typed, ''); assert.equal(state.score, 45);
-  assert.equal(accuracy(state), 100); assert.equal(wpm(state), 1);
+  assert.equal(state.defeated.length, 1); assert.equal(state.typed, ''); assert.equal(state.score, word.length * 10 + 5);
+  assert.equal(accuracy(state), 100); assert.equal(wpm(state), Math.round(word.length / 5));
   for (let i = 0; i < 3; i++) state = reduce(state, { type: 'tick', delta: 200 });
   assert.equal(state.defeated.length, 0);
 });
 test('typos count toward accuracy and correction preserves hearts', () => {
-  let state = reduce(start(), { type: 'input', value: 'x' });
+  const word = start().enemies[0].word;
+  let state = reduce(start(), { type: 'input', value: '#' });
   state = reduce(state, { type: 'input', value: '' });
-  for (const value of ['l', 'le', 'lea', 'leaf']) state = reduce(state, { type: 'input', value });
-  assert.equal(accuracy(state), 80); assert.equal(state.hearts, 5);
+  for (let i = 1; i <= word.length; i++) state = reduce(state, { type: 'input', value: word.slice(0, i) });
+  assert.equal(accuracy(state), Math.round(word.length / (word.length + 1) * 100)); assert.equal(state.hearts, 5);
 });
 test('missed enemies damage the hero, clear prefix and end the run at zero hearts', () => {
   let state = start();
@@ -144,4 +146,66 @@ test('corrupt/oversized/invalid imported saves are rejected before replacement',
   assert.throws(() => parseSave(JSON.stringify({ ...emptySave(), selection: { mode: 'en', stage: 30 } })));
   let state = enterBoss('en', 5); state = { ...state, enemies: [{ ...state.enemies[0], kind: 14 }] };
   assert.throws(() => parseSave(JSON.stringify(checkpointSave({ ...emptySave(), unlocked: { en: 5, th: 1, javascript: 1, python: 1 } }, state))));
+});
+
+
+test('expanded banks contain at least 100 distinct targets per tier and 120 boss phrases per mode', () => {
+  for (const mode of ['en', 'th', 'javascript', 'python']) {
+    for (const stage of [1, 4, 12]) {
+      const pool = game.wordPool(mode, stage);
+      assert.ok(pool.length >= 100, `${mode} stage ${stage}: ${pool.length}`);
+      assert.equal(new Set(pool).size, pool.length);
+      assert.ok(pool.every(word => word.length > 0 && word.length <= 200 && word === word.normalize('NFC')));
+    }
+    assert.ok(game.wordPool(mode, 5, 'mini').length >= 100);
+    assert.ok(game.wordPool(mode, 10, 'boss').length >= 120);
+  }
+});
+test('every bank is drawn without repeats until exhausted, then excludes ten recent and visible targets', () => {
+  for (const mode of ['en', 'th', 'javascript', 'python']) {
+    for (const [stage, role] of [[1, 'normal'], [4, 'normal'], [12, 'normal'], [5, 'mini'], [10, 'boss']]) {
+      const pool = game.wordPool(mode, stage, role);
+      let history = [], drawn = [];
+      for (let i = 0; i < pool.length; i++) {
+        const draw = game.drawWord(mode, stage, i + 1792, role, history);
+        assert.ok(pool.includes(draw.word));
+        history = draw.history; drawn.push(draw.word);
+      }
+      assert.equal(new Set(drawn).size, pool.length);
+      const visible = drawn.slice(0, 5);
+      const next = game.drawWord(mode, stage, 12444, role, history, visible);
+      assert.ok(!drawn.slice(-10).includes(next.word)); assert.ok(!visible.includes(next.word));
+    }
+  }
+});
+test('different run seeds vary opening words and reducer history survives replay and mode changes', () => {
+  const openings = new Set(Array.from({length: 50}, (_, seed) => reduce(createBattle(), {type:'start', seed}).enemies[0].word));
+  assert.ok(openings.size >= 30);
+  let state = start(); const first = state.enemies[0].word;
+  state = reduce(state, {type:'retreat'});
+  state = reduce(state, {type:'reset', mode:'th', stage:1});
+  state = reduce(state, {type:'start', seed:42});
+  state = reduce(state, {type:'retreat'});
+  state = reduce(state, {type:'reset', mode:'en', stage:1});
+  state = reduce(state, {type:'start', seed:0});
+  assert.notEqual(state.enemies[0].word, first);
+  assert.ok(state.wordHistory.includes('en:' + first));
+});
+test('word history survives normal spawns, checkpoint reload, completed-run save and legacy saves', () => {
+  let state = start(); const first = state.enemies[0].word;
+  for(let i=0; i<20; i++) state = reduce(state, {type:'tick', delta:200});
+  assert.equal(new Set(state.enemies.map(e=>e.word)).size, state.enemies.length);
+  assert.equal(state.wordHistory.length, 2);
+  const data = parseSave(JSON.stringify(checkpointSave(emptySave(), state)));
+  assert.deepEqual(restoredBattle(data).wordHistory, state.wordHistory);
+  const finished = parseSave(JSON.stringify(addRun(data, run(1))));
+  const reset = restoredBattle(finished);
+  assert.deepEqual(reset.wordHistory, state.wordHistory);
+  assert.notEqual(reduce(reset,{type:'start',seed:0}).enemies[0].word,first);
+  const legacy = emptySave(); delete legacy.wordHistory;
+  const old = {...state}; delete old.wordHistory; delete old.wordSeed;
+  legacy.checkpoint = old;
+  const migrated = parseSave(JSON.stringify(legacy));
+  assert.deepEqual(migrated.wordHistory,[]); assert.deepEqual(migrated.checkpoint.wordHistory,[]);
+  assert.equal(migrated.checkpoint.wordSeed,0);
 });

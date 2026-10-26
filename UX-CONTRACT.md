@@ -22,6 +22,10 @@ All play is local, with no login or remote API dependency. The stable loopback o
 
 The static server binds only to loopback, validates Host, exposes no write API and confines files to local-dist. The launcher verifies the server identity before reusing port 4173 and never stops other processes. Do not recreate or publish a hosted Site without a new user request.
 
+Normal words, miniboss commands and boss sentences use per-mode sampling without replacement. Recent prompt history survives stage/mode resets, completed runs, reloads and save export/import. When a bank is exhausted a new cycle retains ten recent prompts and visible targets. Legacy v3 saves default missing vocabulary fields, preserving scores and unlocks.
+
+MusicControls owns the offline original woodland soundtrack, independent of combat effects. Explicit click starts music, the labeled slider changes only music volume, hidden tabs pause playback, and returning resumes an enabled track. Volume is remembered; reload requires a new click to satisfy browser playback rules. Failed playback reports a visible retry message. No CDN, login or music service is used.
+
 ## Historical online contract (retired; retained for provenance)
 
 Source of product rules: user request in this chat (medieval forest typing combat, word input, levels, languages/code, hearts, account login, all pixel art). Hosting identity and account boundaries follow the Sites platform identity contract, implemented in app/chatgpt-auth.ts and app/api/runs/route.ts.
@@ -38,3 +42,5 @@ Source of product rules: user request in this chat (medieval forest typing comba
 Typing a complete exact word defeats that enemy automatically. Incorrect input affects accuracy, but only missed enemies cost hearts. Thai composition is processed at composition end. ESC pauses/resumes unless a dialog is open. Background tabs pause combat. Every stage starts with five hearts. A stage unlocks the next stage only in the same practice mode.
 
 Authenticated runs belong only to the server-authenticated user. Client-supplied user IDs are never used. POST verifies same-origin and schema. Results are idempotent by run UUID; retries preserve UUID. Pending saves remain visible and prevent starting another run. Guest history stays in browser local storage and never gets silently merged into an account. No leaderboard; scores are personal practice records reported by the local game client. History is bounded to the most recent 100 runs; full account history view shows the latest 20 of those. Network errors have explicit retry controls. Local development identity is simulated; production identity comes from Sites.
+
+CombatAudio owns preloaded local effects. Printable input, Thai composition keys and Backspace/Delete produce typing taps, including incorrect keys; mobile input falls back to change events without doubling desktop key sounds. Final HP produces defeat audio; surviving boss hits produce strike audio. Effects stop on mute, hidden tabs and unmount. The header effects switch remembers its setting independently of the music player.
